@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>AI 健康照護 (標籤置底優化版)</title>
+    <title>AI 健康照護 (LINE報表優化版)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -22,7 +22,7 @@
 
     <div class="sticky top-0 z-50 bg-white/90 backdrop-blur-sm shadow-sm">
         <header class="p-4 flex justify-between items-center border-b border-slate-50">
-            <h1 class="text-lg font-black tracking-tight text-emerald-600">家庭健康紀錄</h1>
+            <h1 class="text-lg font-black tracking-tight text-emerald-600">Yourfamily Health</h1>
             <div class="flex items-center bg-slate-100 rounded-lg px-2 border border-slate-200">
                 <input type="month" id="globalMonth" onchange="updateAllViews()" class="bg-transparent border-none text-xs font-bold p-1.5 outline-none">
             </div>
@@ -137,6 +137,7 @@
     </div>
 
     <script>
+        // --- 核心變數與初始化 ---
         let members = JSON.parse(localStorage.getItem('health_members_v4') || '["爸爸", "媽媽"]');
         let currentMember = members[0];
         let activeDate = new Date().toISOString().split('T')[0];
@@ -150,6 +151,7 @@
             updateAllViews();
         }
 
+        // --- 導覽功能 ---
         function nav(page) {
             ['record', 'trend', 'settings'].forEach(p => {
                 document.getElementById(p + 'Page').classList.add('hidden');
@@ -163,6 +165,7 @@
 
         function triggerInput(id) { document.getElementById(id).click(); }
 
+        // --- 圖片處理 ---
         function handleFileSelect(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -191,6 +194,7 @@
             document.getElementById('previewContainer').style.display = 'none';
         }
 
+        // --- 儲存與匯入 ---
         function saveData() {
             const sys = document.getElementById('sys').value, dia = document.getElementById('dia').value, glucose = document.getElementById('glucose').value;
             if(currentType === 'bp' && (!sys || !dia)) return alert("請輸入完整血壓值");
@@ -241,14 +245,15 @@
             reader.readAsText(file);
         }
 
+        // --- 健康衛教與詳情彈窗 ---
         function getHealthAdvice(entry) {
             if(entry.type === 'bp') {
                 const s = parseInt(entry.sys), d = parseInt(entry.dia);
-                if(s >= 140 || d >= 90) return { status: '偏高', color: 'text-rose-500', bg: 'bg-rose-50', icon: 'fa-exclamation-triangle', advice: '血壓稍高，請坐下休息。' };
+                if(s >= 140 || d >= 90) return { status: '偏高', color: 'text-rose-500', bg: 'bg-rose-50', icon: 'fa-exclamation-triangle', advice: '血壓稍高。' };
                 return { status: '正常', color: 'text-emerald-500', bg: 'bg-emerald-50', icon: 'fa-check-circle', advice: '狀況優良！' };
             } else {
                 const g = parseInt(entry.glucose);
-                if(g >= 126 && entry.period === '空腹') return { status: '偏高', color: 'text-rose-500', bg: 'bg-rose-50', icon: 'fa-exclamation-triangle', advice: '血糖較高，請注意飲食。' };
+                if(g >= 126 && entry.period === '空腹') return { status: '偏高', color: 'text-rose-500', bg: 'bg-rose-50', icon: 'fa-exclamation-triangle', advice: '空腹血糖偏高。' };
                 return { status: '正常', color: 'text-emerald-500', bg: 'bg-emerald-50', icon: 'fa-check-circle', advice: '數值穩定。' };
             }
         }
@@ -276,6 +281,7 @@
 
         function closeModal() { document.getElementById('detailModal').classList.add('hidden'); }
 
+        // --- 日曆與趨勢圖 ---
         function renderCalendar() {
             const monthVal = document.getElementById('globalMonth').value;
             const [y, m] = monthVal.split('-').map(Number);
@@ -296,7 +302,6 @@
 
         function selectDate(d, h) { activeDate = d; renderCalendar(); if(h) openModal(d); }
 
-        // --- 趨勢圖表渲染 (標籤位置修正) ---
         function renderCharts() {
             const monthKey = document.getElementById('globalMonth').value;
             const data = (db[monthKey] && db[monthKey][currentMember]) ? db[monthKey][currentMember] : [];
@@ -314,19 +319,8 @@
                     { label: '舒張壓(低壓)', data: diaData, borderColor: '#fbbf24', tension: 0.4, fill: false }
                 ]},
                 options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'bottom', // 將標籤移到圖表下方
-                            labels: {
-                                padding: 20,
-                                boxWidth: 12,
-                                font: { size: 11, weight: 'bold' }
-                            }
-                        }
-                    }
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } }
                 }
             });
 
@@ -337,23 +331,13 @@
                 type: 'line',
                 data: { labels: labels.map(l => l+'日'), datasets: [{ label: '血糖', data: glucoseData, borderColor: '#2563eb', tension: 0.4, fill: false }]},
                 options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'bottom', // 將標籤移到圖表下方
-                            labels: {
-                                padding: 20,
-                                boxWidth: 12,
-                                font: { size: 11, weight: 'bold' }
-                            }
-                        }
-                    }
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } }
                 }
             });
         }
 
+        // --- 成員與報表導出 ---
         function switchType(t) {
             currentType = t;
             document.getElementById('bpInput').classList.toggle('hidden', t !== 'bp');
@@ -375,21 +359,44 @@
             const n = document.getElementById('newMemberName').value.trim();
             if(n) { members.push(n); localStorage.setItem('health_members_v4', JSON.stringify(members)); document.getElementById('newMemberName').value=''; renderMemberList(); updateAllViews(); }
         }
+
+        // --- LINE 報表發送 (優化重點) ---
         function sendToLine() {
             const monthKey = document.getElementById('globalMonth').value;
             const data = (db[monthKey] && db[monthKey][currentMember]) ? db[monthKey][currentMember] : [];
-            let msg = `📊【${currentMember}】健康報表\n` + data.slice(-5).map(r => `📍 ${r.date} ${r.time}\n   ${r.type==='bp'?`血壓:${r.sys}/${r.dia}`:`血糖:${r.glucose}`}`).join("\n");
+            if(!data.length) return alert("本月尚無紀錄");
+
+            // 按照日期排序
+            const sortedData = data.sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            let msg = `📊【${currentMember}】健康報表 (${monthKey})\n`;
+            
+            // 限制輸出最後 10 筆紀錄，避免訊息過長
+            sortedData.slice(-10).forEach(r => {
+                const day = r.date.split('-')[2]; // 只取日期
+                if(r.type === 'bp') {
+                    msg += `\n📍 ${day}日 血壓: ${r.sys}/${r.dia}`;
+                } else {
+                    // 區分飯前飯後顯示
+                    msg += `\n📍 ${day}日 血糖(${r.period}): ${r.glucose}`;
+                }
+            });
+            
+            msg += `\n\n© Yourfamily Health`;
             window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(msg)}`;
         }
+
         function exportCSV() {
             const monthKey = document.getElementById('globalMonth').value;
             const data = db[monthKey]?.[currentMember] || [];
-            let csv = "\ufeff日期,時間,項目,高壓/血糖,低壓/時間點\n" + data.map(r => `${r.date},${r.time},${r.type},${r.sys||r.glucose},${r.dia||r.period}`).join("\n");
+            let csv = "\ufeff日期,項目,數值,狀態\n" + data.map(r => `${r.date},${r.type},${r.sys||r.glucose},${r.dia||r.period}`).join("\n");
             const a = document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'})); a.download=`${currentMember}_health.csv`; a.click();
         }
+
         function backupJSON() {
             const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(db)],{type:"application/json"})); a.download = `health_backup.json`; a.click();
         }
+
         function deleteRecord(date, idx) {
             const monthKey = date.substring(0, 7);
             const list = db[monthKey][currentMember];
