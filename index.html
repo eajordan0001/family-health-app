@@ -5,47 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>AI 健康照護 (雙影像輸入版)</title>
+    <title>AI 健康照護 (雙曲線+衛教版)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        /* 頂部選單啟用樣式 */
-        .nav-active { 
-            color: #059669 !important; 
-            border-bottom: 3px solid #059669;
-        }
+        .nav-active { color: #059669 !important; border-bottom: 3px solid #059669; }
         .day-cell { min-height: 60px; }
-        /* 圖片預覽樣式優化 */
         #previewContainer { display: none; margin-top: 10px; position: relative; }
-        #previewImg { max-height: 150px; margin: 0 auto; border-radius: 12px; border: 2px solid #fff; shadow-md }
-        #removePhotoBtn { position: absolute; top: -10px; right: 50%; transform: translateX(75px); background: rgba(255,255,255,0.9); border-radius: 50%; padding: 2px 5px; color: #ef4444; font-size: 16px; backdrop-blur-sm }
+        #previewImg { max-height: 150px; margin: 0 auto; border-radius: 12px; border: 2px solid #fff; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        #removePhotoBtn { position: absolute; top: -10px; right: 50%; transform: translateX(75px); background: white; border-radius: 50%; padding: 2px 5px; color: #ef4444; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen font-sans text-slate-900 pb-10">
 
-    <div class="sticky top-0 z-50 bg-white shadow-sm backdrop-blur-sm bg-white/90">
+    <div class="sticky top-0 z-50 bg-white/90 backdrop-blur-sm shadow-sm">
         <header class="p-4 flex justify-between items-center border-b border-slate-50">
             <h1 class="text-lg font-black tracking-tight text-emerald-600">Yourfamily Health</h1>
             <div class="flex items-center bg-slate-100 rounded-lg px-2 border border-slate-200">
-                <input type="month" id="globalMonth" onchange="updateAllViews()" class="bg-transparent border-none text-xs font-bold p-1.5 outline-none text-slate-700">
+                <input type="month" id="globalMonth" onchange="updateAllViews()" class="bg-transparent border-none text-xs font-bold p-1.5 outline-none">
             </div>
         </header>
-        
         <nav class="flex justify-around items-center border-b border-slate-100">
-            <button onclick="nav('record')" id="nav-record" class="flex-1 py-3 flex flex-col items-center text-slate-400 nav-active transition-all">
-                <i class="fas fa-edit text-sm"></i>
-                <span class="text-[11px] mt-1 font-bold">紀錄數據</span>
-            </button>
-            <button onclick="nav('trend')" id="nav-trend" class="flex-1 py-3 flex flex-col items-center text-slate-400 transition-all">
-                <i class="fas fa-chart-line text-sm"></i>
-                <span class="text-[11px] mt-1 font-bold">趨勢圖表</span>
-            </button>
-            <button onclick="nav('settings')" id="nav-settings" class="flex-1 py-3 flex flex-col items-center text-slate-400 transition-all">
-                <i class="fas fa-cog text-sm"></i>
-                <span class="text-[11px] mt-1 font-bold">管理設定</span>
-            </button>
+            <button onclick="nav('record')" id="nav-record" class="flex-1 py-3 flex flex-col items-center text-slate-400 nav-active font-bold"><i class="fas fa-edit text-sm"></i><span class="text-[11px] mt-1">紀錄</span></button>
+            <button onclick="nav('trend')" id="nav-trend" class="flex-1 py-3 flex flex-col items-center text-slate-400 font-bold"><i class="fas fa-chart-line text-sm"></i><span class="text-[11px] mt-1">趨勢</span></button>
+            <button onclick="nav('settings')" id="nav-settings" class="flex-1 py-3 flex flex-col items-center text-slate-400 font-bold"><i class="fas fa-cog text-sm"></i><span class="text-[11px] mt-1">管理</span></button>
         </nav>
     </div>
 
@@ -54,112 +39,92 @@
             <div id="memberTabs" class="flex space-x-2 overflow-x-auto pb-2 no-scrollbar"></div>
 
             <div class="bg-white rounded-3xl shadow-sm p-6 border border-slate-100">
-                <div class="flex bg-slate-50 rounded-xl p-1 mb-4 border border-slate-100">
-                    <button onclick="switchType('bp')" id="bpBtn" class="flex-1 py-1.5 text-xs rounded-lg bg-white shadow-sm font-bold text-emerald-600 transition-all">血壓/心跳</button>
-                    <button onclick="switchType('bs')" id="bsBtn" class="flex-1 py-1.5 text-xs rounded-lg text-slate-400 transition-all">血糖紀錄</button>
+                <div class="flex bg-slate-50 rounded-xl p-1 mb-4 border">
+                    <button onclick="switchType('bp')" id="bpBtn" class="flex-1 py-1.5 text-xs rounded-lg bg-white shadow-sm font-bold text-emerald-600">血壓/心跳</button>
+                    <button onclick="switchType('bs')" id="bsBtn" class="flex-1 py-1.5 text-xs rounded-lg text-slate-400">血糖紀錄</button>
                 </div>
 
                 <div id="bpInput" class="grid grid-cols-3 gap-3 mb-4">
-                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                        <label class="text-[10px] font-bold text-slate-400 block mb-1">收縮壓 (高壓)</label>
-                        <input type="number" id="sys" placeholder="120" inputmode="numeric" class="bg-transparent w-full text-center font-black text-2xl outline-none text-slate-800 placeholder:text-slate-300">
+                    <div class="bg-slate-50 p-2 rounded-xl text-center">
+                        <label class="text-[9px] font-bold text-slate-400 block">收縮壓</label>
+                        <input type="number" id="sys" placeholder="120" inputmode="numeric" class="bg-transparent w-full text-center font-black text-xl outline-none">
                     </div>
-                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                        <label class="text-[10px] font-bold text-slate-400 block mb-1">舒張壓 (低壓)</label>
-                        <input type="number" id="dia" placeholder="80" inputmode="numeric" class="bg-transparent w-full text-center font-black text-2xl outline-none text-slate-800 placeholder:text-slate-300">
+                    <div class="bg-slate-50 p-2 rounded-xl text-center">
+                        <label class="text-[9px] font-bold text-slate-400 block">舒張壓</label>
+                        <input type="number" id="dia" placeholder="80" inputmode="numeric" class="bg-transparent w-full text-center font-black text-xl outline-none">
                     </div>
-                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                        <label class="text-[10px] font-bold text-slate-400 block mb-1">心跳 (次/分)</label>
-                        <input type="number" id="pulse" placeholder="75" inputmode="numeric" class="bg-transparent w-full text-center font-black text-2xl outline-none text-slate-800 placeholder:text-slate-300">
+                    <div class="bg-slate-50 p-2 rounded-xl text-center">
+                        <label class="text-[9px] font-bold text-slate-400 block">心跳</label>
+                        <input type="number" id="pulse" placeholder="75" inputmode="numeric" class="bg-transparent w-full text-center font-black text-xl outline-none">
                     </div>
                 </div>
 
                 <div id="bsInput" class="hidden grid grid-cols-2 gap-3 mb-4">
-                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                        <label class="text-[10px] font-bold text-slate-400 block mb-1">血糖值 (mg/dL)</label>
-                        <input type="number" id="glucose" placeholder="100" inputmode="numeric" class="bg-transparent w-full text-center font-black text-2xl outline-none text-slate-800 placeholder:text-slate-300">
-                    </div>
-                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex flex-col justify-center">
-                        <label class="text-[10px] font-bold text-slate-400 block mb-1">量測時間點</label>
-                        <select id="bsPeriod" class="bg-transparent text-sm font-bold border-none outline-none text-slate-700 p-0">
-                            <option value="空腹">空腹</option>
-                            <option value="飯後2hr">飯後 2hr</option>
-                            <option value="睡前">睡前</option>
-                            <option value="隨機">隨機</option>
-                        </select>
-                    </div>
+                    <input type="number" id="glucose" placeholder="血糖值" inputmode="numeric" class="bg-slate-50 p-4 rounded-xl text-center font-black text-xl outline-none">
+                    <select id="bsPeriod" class="bg-slate-50 p-4 rounded-xl text-sm font-bold outline-none border-none">
+                        <option value="空腹">空腹</option><option value="飯後2hr">飯後 2hr</option>
+                    </select>
                 </div>
 
+                <div class="mb-4 grid grid-cols-2 gap-3">
+                    <button onclick="triggerInput('cameraInput')" class="py-2.5 bg-slate-100 text-slate-600 rounded-xl text-xs font-bold border active:bg-slate-200">
+                        <i class="fas fa-camera mr-1 text-emerald-500"></i> 直接拍照
+                    </button>
+                    <button onclick="triggerInput('galleryInput')" class="py-2.5 bg-slate-100 text-slate-600 rounded-xl text-xs font-bold border active:bg-slate-200">
+                        <i class="fas fa-image mr-1 text-sky-500"></i> 相簿上傳
+                    </button>
+                </div>
                 <input type="file" id="cameraInput" accept="image/*" capture="camera" class="hidden" onchange="handleFileSelect(event)">
                 <input type="file" id="galleryInput" accept="image/*" class="hidden" onchange="handleFileSelect(event)">
 
-                <div class="mb-4 grid grid-cols-2 gap-3">
-                    <button onclick="document.getElementById('cameraInput').click()" class="py-2.5 px-4 bg-slate-100 text-slate-600 rounded-xl text-xs font-bold flex items-center justify-center border border-slate-200 active:bg-slate-200">
-                        <i class="fas fa-camera mr-2 text-emerald-500"></i> 直接拍照
-                    </button>
-                    <button onclick="document.getElementById('galleryInput').click()" class="py-2.5 px-4 bg-slate-100 text-slate-600 rounded-xl text-xs font-bold flex items-center justify-center border border-slate-200 active:bg-slate-200">
-                        <i class="fas fa-image mr-2 text-sky-500"></i> 上傳相簿照片
-                    </button>
-                </div>
-
                 <div id="previewContainer">
-                    <img id="previewImg" src="" alt="預覽">
-                    <button id="removePhotoBtn" onclick="removeCurrentPhoto()"><i class="fas fa-times-circle"></i></button>
+                    <img id="previewImg" src=""><button id="removePhotoBtn" onclick="removeCurrentPhoto()"><i class="fas fa-times text-xs"></i></button>
                 </div>
 
-                <button onclick="saveData()" class="w-full mt-2 py-4 bg-emerald-600 text-white rounded-2xl font-bold shadow-lg shadow-emerald-100 active:scale-95 active:bg-emerald-700 transition">儲存 <span id="targetDate">今日</span> 紀錄</button>
+                <button onclick="saveData()" class="w-full mt-3 py-4 bg-emerald-600 text-white rounded-2xl font-bold shadow-lg active:scale-95 transition">儲存 <span id="targetDate">今日</span> 紀錄</button>
             </div>
 
             <section class="bg-white rounded-3xl shadow-sm p-5 border border-slate-100">
-                <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 text-center">量測歷史日曆</h3>
                 <div id="calendarGrid" class="grid grid-cols-7 gap-1.5 text-sm text-center"></div>
             </section>
         </main>
 
         <main id="trendPage" class="hidden p-4 space-y-4 max-w-xl mx-auto">
-            <section class="bg-white rounded-3xl shadow-sm p-6 border border-slate-100 chart-container">
-                <h3 class="text-sm font-bold text-slate-700 mb-4 text-center">血壓走勢圖 (收縮壓)</h3>
-                <canvas id="bpChart" height="280"></canvas>
+            <section class="bg-white rounded-3xl shadow-sm p-6 border border-slate-100">
+                <h3 class="text-sm font-bold text-slate-700 mb-4 text-center">血壓走勢 (收縮/舒張壓)</h3>
+                <div style="height: 300px;"><canvas id="bpChart"></canvas></div>
             </section>
-            <section class="bg-white rounded-3xl shadow-sm p-6 border border-slate-100 chart-container">
-                <h3 class="text-sm font-bold text-slate-700 mb-4 text-center">血糖走勢圖</h3>
-                <canvas id="bsChart" height="280"></canvas>
+            <section class="bg-white rounded-3xl shadow-sm p-6 border border-slate-100">
+                <h3 class="text-sm font-bold text-slate-700 mb-4 text-center">血糖走勢</h3>
+                <div style="height: 300px;"><canvas id="bsChart"></canvas></div>
             </section>
         </main>
 
         <main id="settingsPage" class="hidden p-4 space-y-4 max-w-xl mx-auto">
-            <section class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
-                <h3 class="font-bold mb-4 text-slate-700 flex items-center"><i class="fas fa-user-friends mr-2 text-emerald-500"></i>家庭成員管理</h3>
-                <div id="memberList" class="space-y-2.5 mb-5"></div>
+            <section class="bg-white rounded-3xl p-6 border border-slate-100">
+                <h3 class="font-bold mb-4 text-slate-700">成員管理</h3>
+                <div id="memberList" class="space-y-2 mb-4"></div>
                 <div class="flex gap-2">
-                    <input type="text" id="newMemberName" placeholder="輸入新成員姓名" class="flex-1 bg-slate-50 rounded-xl px-4 py-3 text-sm border border-slate-100 outline-emerald-500 placeholder:text-slate-300">
-                    <button onclick="addMember()" class="bg-slate-800 text-white px-6 py-3 rounded-xl text-sm font-bold active:bg-slate-900">新增</button>
+                    <input type="text" id="newMemberName" placeholder="新成員" class="flex-1 bg-slate-50 rounded-xl px-4 py-2 border outline-emerald-500 text-sm">
+                    <button onclick="addMember()" class="bg-slate-800 text-white px-6 py-2 rounded-xl text-sm font-bold">新增</button>
                 </div>
             </section>
-
-            <div class="grid grid-cols-1 gap-3 pt-4">
-                <button onclick="sendToLine()" class="w-full py-4 bg-[#06C755] text-white rounded-2xl font-bold flex items-center justify-center shadow-md active:bg-[#05b54d]">
-                    <i class="fab fa-line mr-2 text-2xl"></i> 傳送 LINE 健康報表
-                </button>
-                <button onclick="exportCSV()" class="w-full py-4 bg-white border border-slate-200 rounded-2xl font-bold text-slate-600 flex items-center justify-center active:bg-slate-50">
-                    <i class="fas fa-file-csv mr-2 text-emerald-500 text-lg"></i> 匯出本月 CSV 檔案
-                </button>
-                <button onclick="backupJSON()" class="w-full py-3 text-slate-400 text-xs font-bold uppercase tracking-widest flex items-center justify-center active:text-slate-500">
-                    <i class="fas fa-download mr-1.5"></i> 下載數據備份 (JSON)
-                </button>
+            <div class="space-y-3">
+                <button onclick="sendToLine()" class="w-full py-4 bg-[#06C755] text-white rounded-2xl font-bold flex items-center justify-center"><i class="fab fa-line mr-2 text-xl"></i> 傳送 LINE 報表</button>
+                <button onclick="exportCSV()" class="w-full py-4 bg-white border rounded-2xl font-bold text-slate-600 flex items-center justify-center"><i class="fas fa-file-csv mr-2 text-emerald-500"></i> 匯出 CSV</button>
+                <button onclick="backupJSON()" class="w-full py-3 text-slate-400 text-[10px] font-bold uppercase tracking-tighter">下載 JSON 數據備份</button>
             </div>
         </main>
     </div>
 
-    <div id="detailModal" class="fixed inset-0 bg-black/70 hidden z-[100] flex items-end sm:items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300" onclick="checkCloseModal(event)">
-        <div class="bg-white w-full max-w-xl rounded-t-[2.5rem] sm:rounded-[2.5rem] p-8 max-h-[85vh] overflow-y-auto shadow-2xl transform transition-transform duration-300 translate-y-full sm:translate-y-0" onclick="event.stopPropagation()">
+    <div id="detailModal" class="fixed inset-0 bg-black/70 hidden z-[100] flex items-end sm:items-center justify-center p-4 backdrop-blur-sm" onclick="closeModal()">
+        <div class="bg-white w-full max-w-xl rounded-t-[2.5rem] sm:rounded-[2.5rem] p-8 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
             <div id="modalContent" class="space-y-6"></div>
-            <button onclick="closeModal()" class="w-full mt-8 py-4 bg-slate-100 text-slate-500 rounded-2xl font-bold active:bg-slate-200 transition">關閉視窗</button>
+            <button onclick="closeModal()" class="w-full mt-6 py-4 bg-slate-100 text-slate-500 rounded-2xl font-bold">關閉</button>
         </div>
     </div>
 
     <script>
-        // --- 狀態與資料庫初始化 ---
         let members = JSON.parse(localStorage.getItem('health_members_v4') || '["爸爸", "媽媽"]');
         let currentMember = members[0];
         let activeDate = new Date().toISOString().split('T')[0];
@@ -168,14 +133,11 @@
         let currentBase64 = null;
         let charts = {};
 
-        // --- 初始化啟動 ---
         function init() {
             document.getElementById('globalMonth').value = activeDate.substring(0, 7);
-            document.getElementById('targetDate').innerText = '今日';
             updateAllViews();
         }
 
-        // --- 核心導覽邏輯 (頂部) ---
         function nav(page) {
             ['record', 'trend', 'settings'].forEach(p => {
                 document.getElementById(p + 'Page').classList.add('hidden');
@@ -183,42 +145,28 @@
             });
             document.getElementById(page + 'Page').classList.remove('hidden');
             document.getElementById('nav-' + page).classList.add('nav-active');
-            window.scrollTo(0, 0); // 切換頁面時回到頂部
             if(page === 'trend') renderCharts();
             if(page === 'settings') renderMemberList();
         }
 
-        // --- 圖片處理邏輯 (新增與優化) ---
-        
-        // 統一處理檔案選取 (拍照或相簿)
+        function triggerInput(id) { document.getElementById(id).click(); }
+
         function handleFileSelect(e) {
             const file = e.target.files[0];
             if (!file) return;
-
-            // 顯示讀取中狀態 (簡單示意)
-            document.getElementById('previewContainer').style.display = 'block';
-            document.getElementById('previewImg').src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxZW0iIGhlaWdodD0iMWVtIiB2aWV3Qm94PSIwIDAgMjQgMjQiPjxnIGZpbGw9Im5vbmUiIHN0cm9rZT0iY3VycmVudENvbG9yIi9nPjwvc3ZnPg=='; // 清空舊圖
-
             const reader = new FileReader();
             reader.onload = function(event) {
                 const img = new Image();
                 img.onload = function() {
-                    // 圖片壓縮邏輯 (限制寬度 400px，品質 0.6)
                     const canvas = document.createElement('canvas');
                     const MAX_WIDTH = 400;
                     let width = img.width, height = img.height;
                     if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
                     canvas.width = width; canvas.height = height;
                     canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-                    
-                    // 轉為 Base64 字串
                     currentBase64 = canvas.toDataURL('image/jpeg', 0.6);
-                    
-                    // 顯示預覽
-                    const previewImg = document.getElementById('previewImg');
-                    previewImg.src = currentBase64;
-                    
-                    // 清空 input，允許重複選取同一張圖
+                    document.getElementById('previewImg').src = currentBase64;
+                    document.getElementById('previewContainer').style.display = 'block';
                     e.target.value = '';
                 };
                 img.src = event.target.result;
@@ -226,34 +174,37 @@
             reader.readAsDataURL(file);
         }
 
-        // 移除當前選取的照片
         function removeCurrentPhoto() {
             currentBase64 = null;
-            document.getElementById('previewImg').src = '';
             document.getElementById('previewContainer').style.display = 'none';
         }
 
-        // --- 資料儲存邏輯 ---
-        function saveData() {
-            const sys = document.getElementById('sys').value;
-            const dia = document.getElementById('dia').value;
-            const glucose = document.getElementById('glucose').value;
+        // --- AI 衛教判斷邏輯 ---
+        function getHealthAdvice(entry) {
+            if(entry.type === 'bp') {
+                const s = parseInt(entry.sys), d = parseInt(entry.dia);
+                if(s >= 140 || d >= 90) return { status: '偏高', color: 'text-rose-500', bg: 'bg-rose-50', icon: 'fa-exclamation-triangle', advice: '血壓稍高，請坐下休息 15 分鐘後重測。若持續偏高請諮詢醫師。' };
+                if(s < 90 || d < 60) return { status: '偏低', color: 'text-amber-500', bg: 'bg-amber-50', icon: 'fa-info-circle', advice: '血壓稍低，注意是否有頭暈現象，多補充水分。' };
+                return { status: '正常', color: 'text-emerald-500', bg: 'bg-emerald-50', icon: 'fa-check-circle', advice: '血壓狀況優良，請繼續保持健康生活習慣！' };
+            } else {
+                const g = parseInt(entry.glucose);
+                if(entry.period === '空腹') {
+                    if(g >= 126) return { status: '血糖偏高', color: 'text-rose-500', bg: 'bg-rose-50', icon: 'fa-exclamation-triangle', advice: '空腹血糖較高，建議控制澱粉攝取並記錄飲食內容。' };
+                    if(g < 70) return { status: '低血糖', color: 'text-amber-500', bg: 'bg-amber-50', icon: 'fa-cookie-bite', advice: '血糖過低！請立即補充適量糖分（如糖果、果汁）。' };
+                }
+                return { status: '正常', color: 'text-emerald-500', bg: 'bg-emerald-50', icon: 'fa-check-circle', advice: '目前血糖數值在穩定範圍內。' };
+            }
+        }
 
-            // 基本驗證
-            if(currentType === 'bp' && (!sys || !dia)) return alert("⚠️ 請輸入完整的血壓數值 (高壓與低壓)");
-            if(currentType === 'bs' && !glucose) return alert("⚠️ 請輸入血糖數值");
+        function saveData() {
+            const sys = document.getElementById('sys').value, dia = document.getElementById('dia').value, glucose = document.getElementById('glucose').value;
+            if(currentType === 'bp' && (!sys || !dia)) return alert("請輸入完整血壓值");
+            if(currentType === 'bs' && !glucose) return alert("請輸入血糖值");
 
             const time = new Date().toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit', hour12:false});
             let entry = { time, type: currentType, date: activeDate, photo: currentBase64 };
-            
-            if(currentType === 'bp') {
-                entry.sys = sys;
-                entry.dia = dia;
-                entry.pulse = document.getElementById('pulse').value || '--';
-            } else {
-                entry.glucose = glucose;
-                entry.period = document.getElementById('bsPeriod').value;
-            }
+            if(currentType === 'bp') { entry.sys = sys; entry.dia = dia; entry.pulse = document.getElementById('pulse').value || '--'; }
+            else { entry.glucose = glucose; entry.period = document.getElementById('bsPeriod').value; }
 
             const monthKey = activeDate.substring(0, 7);
             if(!db[monthKey]) db[monthKey] = {};
@@ -262,287 +213,165 @@
             
             try {
                 localStorage.setItem('health_db_v4', JSON.stringify(db));
-                alert("✅ 紀錄儲存成功");
-                
-                // 重置輸入狀態
+                alert("✅ 儲存成功");
                 removeCurrentPhoto();
                 ['sys','dia','pulse','glucose'].forEach(id => document.getElementById(id).value = '');
                 updateAllViews();
-                
-            } catch (e) { 
-                console.error(e);
-                alert("❌ 儲存失敗：手機儲存空間已滿，請匯出並清理舊數據。"); 
-            }
+            } catch (e) { alert("儲存空間已滿"); }
         }
 
-        // --- 彈窗邏輯 (優化) ---
         function openModal(date) {
             const monthKey = date.substring(0, 7);
             const data = (db[monthKey] && db[monthKey][currentMember]) ? db[monthKey][currentMember].filter(r => r.date === date) : [];
             
-            let htmlContent = `
-                <div class="text-center mb-6">
-                    <h2 class="text-2xl font-black text-slate-800">${date.split('-')[1]}月${date.split('-')[2]}日</h2>
-                    <p class="text-sm text-slate-400 font-bold">${currentMember} 的健康量測紀錄</p>
-                </div>
-            `;
-
-            if(data.length === 0) {
-                htmlContent += `<p class="text-center text-slate-400 py-10 text-sm">此日期無紀錄</p>`;
-            } else {
-                htmlContent += data.map((r, idx) => `
-                    <div class="p-6 rounded-3xl border border-slate-100 bg-slate-50 space-y-3.5 relative">
-                        <button onclick="deleteRecord('${date}', ${idx})" class="absolute top-4 right-4 text-xs text-red-300 hover:text-red-500 font-bold bg-white px-2 py-1 rounded-full shadow-sm">刪除</button>
-                        <div class="flex items-center">
-                            <span class="text-xs font-black text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full flex items-center"><i class="far fa-clock mr-1.5"></i>${r.time}</span>
-                        </div>
-                        <div class="text-2xl font-black text-slate-800 tracking-tight">
-                            ${r.type==='bp' ? `<i class="fas fa-heartbeat text-rose-500 mr-2.5"></i>${r.sys}/${r.dia} <small class="text-base font-medium text-slate-500">mmHg</small>` : `<i class="fas fa-tint text-blue-500 mr-2.5"></i>${r.glucose} <small class="text-base font-medium text-slate-500">mg/dL (${r.period})</small>`}
-                        </div>
-                        ${r.type==='bp' ? `<p class="text-xs text-slate-500 font-bold">心跳：${r.pulse} 次/分</p>` : ''}
-                        ${r.photo ? `<div class="pt-2"><img src="${r.photo}" class="w-full rounded-2xl shadow-md border-4 border-white cursor-pointer" onclick="window.open(this.src)"></div>` : ''}
-                    </div>
-                `).join('');
-            }
-
-            document.getElementById('modalContent').innerHTML = htmlContent;
+            let html = `<div class="text-center mb-6"><h2 class="text-2xl font-black">${date}</h2><p class="text-xs text-slate-400 font-bold">${currentMember}</p></div>`;
             
-            // 顯示 Modal (帶動畫)
-            const modal = document.getElementById('detailModal');
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.querySelector('div').classList.remove('translate-y-full');
-            }, 10);
+            if(!data.length) html += `<p class="text-center py-10 text-slate-400">無紀錄</p>`;
+            else {
+                html += data.map((r, idx) => {
+                    const advice = getHealthAdvice(r);
+                    return `
+                    <div class="p-6 rounded-3xl border border-slate-100 bg-slate-50 space-y-4 relative shadow-inner">
+                        <button onclick="deleteRecord('${date}', ${idx})" class="absolute top-4 right-4 text-[10px] text-red-300 font-bold">刪除</button>
+                        <div class="flex items-center text-xs font-black text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full w-fit"><i class="far fa-clock mr-1.5"></i>${r.time}</div>
+                        <div class="text-2xl font-black text-slate-800">
+                            ${r.type==='bp' ? `<i class="fas fa-heartbeat text-rose-500 mr-2"></i>${r.sys}/${r.dia} <small class="text-sm font-bold text-slate-500">mmHg</small>` : `<i class="fas fa-tint text-blue-500 mr-2"></i>${r.glucose} <small class="text-sm font-bold text-slate-500">mg/dL (${r.period})</small>`}
+                        </div>
+                        <div class="${advice.bg} ${advice.color} p-4 rounded-2xl border border-white shadow-sm">
+                            <div class="flex items-center font-black text-sm mb-1"><i class="fas ${advice.icon} mr-2"></i>AI 分析結果：${advice.status}</div>
+                            <div class="text-[11px] leading-relaxed opacity-80 font-bold">${advice.advice}</div>
+                        </div>
+                        ${r.photo ? `<img src="${r.photo}" class="w-full rounded-2xl shadow-md border-4 border-white">` : ''}
+                    </div>`;
+                }).join('');
+            }
+            document.getElementById('modalContent').innerHTML = html;
+            document.getElementById('detailModal').classList.remove('hidden');
         }
 
-        function closeModal() {
-            const modal = document.getElementById('detailModal');
-            modal.querySelector('div').classList.add('translate-y-full');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 300);
-        }
+        function closeModal() { document.getElementById('detailModal').classList.add('hidden'); }
 
-        function checkCloseModal(e) {
-            if (e.target.id === 'detailModal') closeModal();
-        }
-
-        // --- 日曆渲染邏輯 ---
         function renderCalendar() {
             const monthVal = document.getElementById('globalMonth').value;
             const [y, m] = monthVal.split('-').map(Number);
-            const firstDay = new Date(y, m-1, 1).getDay(); // 0 是週日
+            const firstDay = new Date(y, m-1, 1).getDay();
             const daysInMonth = new Date(y, m, 0).getDate();
             const container = document.getElementById('calendarGrid');
             container.innerHTML = '';
-            
-            // 填充空白
             for(let i=0; i<firstDay; i++) container.innerHTML += '<div></div>';
-            
             const monthData = (db[monthVal] && db[monthVal][currentMember]) ? db[monthVal][currentMember] : [];
-            const todayStr = new Date().toISOString().split('T')[0];
-
             for(let d=1; d<=daysInMonth; d++) {
                 const fullDate = `${monthVal}-${String(d).padStart(2, '0')}`;
                 const entries = monthData.filter(r => r.date === fullDate);
                 const isSelected = fullDate === activeDate;
-                const isToday = fullDate === todayStr;
-
                 container.innerHTML += `
-                    <div onclick="selectDate('${fullDate}', ${entries.length > 0})" class="day-cell flex flex-col items-center justify-center rounded-2xl cursor-pointer transition relative ${isSelected?'bg-emerald-600 text-white shadow-md font-black':(isToday?'bg-emerald-50 text-emerald-700 font-bold border border-emerald-100':'text-slate-600 hover:bg-slate-100')}">
-                        <span class="text-sm">${d}</span>
+                    <div onclick="selectDate('${fullDate}', ${entries.length > 0})" class="day-cell flex flex-col items-center justify-center rounded-2xl cursor-pointer transition ${isSelected?'bg-emerald-600 text-white shadow-md font-bold':'text-slate-500 hover:bg-slate-100'}">
+                        <span class="text-xs">${d}</span>
                         ${entries.length > 0 ? `<div class="w-1.5 h-1.5 ${isSelected?'bg-white':'bg-emerald-400'} rounded-full mt-1"></div>` : '<div class="h-1.5 mt-1"></div>'}
                     </div>`;
             }
         }
 
-        function selectDate(d, hasData) {
-            activeDate = d;
-            const todayStr = new Date().toISOString().split('T')[0];
-            document.getElementById('targetDate').innerText = (d === todayStr) ? '今日' : d.split('-')[1]+'/'+d.split('-')[2];
-            renderCalendar();
-            if(hasData) openModal(d);
-        }
+        function selectDate(d, h) { activeDate = d; renderCalendar(); if(h) openModal(d); }
 
-        // --- 趨勢圖表邏輯 (Chart.js) ---
         function renderCharts() {
             const monthKey = document.getElementById('globalMonth').value;
             const data = (db[monthKey] && db[monthKey][currentMember]) ? db[monthKey][currentMember] : [];
+            const labels = [...new Set(data.map(r => r.date.split('-')[2]))].sort();
             
-            // 提取日期作為標籤 (例如 "01日")
-            const labels = [...new Set(data.map(r => r.date.split('-')[2]))].sort().map(d => d+'日');
+            // 血壓雙曲線
+            const bpCtx = document.getElementById('bpChart').getContext('2d');
+            if(charts['bpChart']) charts['bpChart'].destroy();
             
-            // 繪製統一函式
-            const draw = (id, label, rawData, color) => {
-                const ctx = document.getElementById(id).getContext('2d');
-                if(charts[id]) charts[id].destroy(); // 銷毀舊圖表
-
-                // 處理無數據情況
-                if(rawData.every(v => v === null)) {
-                    ctx.font = '14px sans-serif';
-                    ctx.fillStyle = '#94a3b8';
-                    ctx.textAlign = 'center';
-                    ctx.fillText('本月無相關數據', ctx.canvas.width/2, ctx.canvas.height/2);
-                    return;
-                }
-
-                charts[id] = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: labels,
-                        datasets: [{ 
-                            label, 
-                            data: rawData, 
-                            borderColor: color, 
-                            backgroundColor: color+'11', // 填充顏色
-                            tension: 0.4, // 曲線弧度
-                            fill: true, 
-                            pointBackgroundColor: color,
-                            pointRadius: 4,
-                            borderWidth: 3
-                        }]
-                    },
-                    options: { 
-                        responsive: true, 
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } }, // 隱藏圖例
-                        scales: {
-                            y: { grid: { color: '#f1f5f9' }, ticks: { font: { size: 10 } } },
-                            x: { grid: { display: false }, ticks: { font: { size: 10 } } }
-                        }
-                    }
-                });
-            };
-
-            // 整理血壓數據 (收縮壓)
-            const bpData = labels.map(dayLabel => {
-                const day = dayLabel.replace('日', '');
+            const sysData = labels.map(day => {
                 const d = data.filter(r => r.date.endsWith(day) && r.type==='bp');
-                // 取當天最後一筆
-                return d.length ? parseInt(d[d.length-1].sys) : null;
+                return d.length ? d[d.length-1].sys : null;
+            });
+            const diaData = labels.map(day => {
+                const d = data.filter(r => r.date.endsWith(day) && r.type==='bp');
+                return d.length ? d[d.length-1].dia : null;
             });
 
-            // 整理血糖數據
-            const bsData = labels.map(dayLabel => {
-                const day = dayLabel.replace('日', '');
+            charts['bpChart'] = new Chart(bpCtx, {
+                type: 'line',
+                data: {
+                    labels: labels.map(l => l+'日'),
+                    datasets: [
+                        { label: '收縮壓(高壓)', data: sysData, borderColor: '#e11d48', backgroundColor: '#e11d4811', tension: 0.4, fill: true, pointRadius: 4 },
+                        { label: '舒張壓(低壓)', data: diaData, borderColor: '#fbbf24', backgroundColor: '#fbbf2411', tension: 0.4, fill: true, pointRadius: 4 }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } } }
+            });
+
+            // 血糖單曲線
+            const bsCtx = document.getElementById('bsChart').getContext('2d');
+            if(charts['bsChart']) charts['bsChart'].destroy();
+            const glucoseData = labels.map(day => {
                 const d = data.filter(r => r.date.endsWith(day) && r.type==='bs');
-                return d.length ? parseInt(d[d.length-1].glucose) : null;
+                return d.length ? d[d.length-1].glucose : null;
             });
-
-            draw('bpChart', '收縮壓趨勢', bpData, '#e11d48'); // 玫瑰紅
-            draw('bsChart', '血糖趨勢', bsData, '#2563eb'); // 寶石藍
+            charts['bsChart'] = new Chart(bsCtx, {
+                type: 'line',
+                data: {
+                    labels: labels.map(l => l+'日'),
+                    datasets: [{ label: '血糖值', data: glucoseData, borderColor: '#2563eb', backgroundColor: '#2563eb11', tension: 0.4, fill: true, pointRadius: 4 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
         }
 
-        // --- 成員與設定邏輯 ---
+        // --- 其他管理功能 ---
         function switchType(t) {
             currentType = t;
             document.getElementById('bpInput').classList.toggle('hidden', t !== 'bp');
             document.getElementById('bsInput').classList.toggle('hidden', t !== 'bs');
             document.getElementById('bpBtn').className = t === 'bp' ? 'flex-1 py-1.5 text-xs rounded-lg bg-white shadow-sm font-bold text-emerald-600' : 'flex-1 py-1.5 text-xs rounded-lg text-slate-400';
             document.getElementById('bsBtn').className = t === 'bs' ? 'flex-1 py-1.5 text-xs rounded-lg bg-white shadow-sm font-bold text-emerald-600' : 'flex-1 py-1.5 text-xs rounded-lg text-slate-400';
-            removeCurrentPhoto(); // 切換類型時移除照片
         }
-
         function updateAllViews() { renderMemberTabs(); renderCalendar(); }
-
         function renderMemberTabs() {
             document.getElementById('memberTabs').innerHTML = members.map(m => `
-                <button onclick="currentMember='${m}';updateAllViews()" class="px-5 py-2.5 rounded-xl whitespace-nowrap text-sm font-bold transition duration-150 ${currentMember === m ? 'bg-slate-800 text-white shadow-md' : 'bg-white text-slate-500 border border-slate-100 hover:bg-slate-50'}">${m}</button>
+                <button onclick="currentMember='${m}';updateAllViews()" class="px-5 py-2 rounded-xl whitespace-nowrap text-sm font-bold ${currentMember === m ? 'bg-slate-800 text-white shadow-md' : 'bg-white text-slate-400 border border-slate-100'}">${m}</button>
             `).join('');
         }
-
         function renderMemberList() {
             document.getElementById('memberList').innerHTML = members.map((m, i) => `
-                <div class="flex justify-between bg-slate-50 p-4 rounded-2xl items-center border border-slate-100 shadow-inner">
-                    <span class="font-bold text-slate-700">${m}</span>
-                    <button onclick="deleteMember(${i})" class="text-red-400 text-xs font-bold bg-white px-3 py-1.5 rounded-lg border border-red-100 hover:bg-red-50 transition">移除</button>
+                <div class="flex justify-between bg-slate-50 p-4 rounded-2xl items-center font-bold">
+                    <span>${m}</span><button onclick="members.splice(${i},1);localStorage.setItem('health_members_v4',JSON.stringify(members));renderMemberList();updateAllViews()" class="text-red-400 text-xs">移除</button>
                 </div>`).join('');
         }
-
         function addMember() {
             const n = document.getElementById('newMemberName').value.trim();
-            if(!n) return;
-            if(members.includes(n)) return alert("成員名稱已存在");
-            members.push(n); 
-            localStorage.setItem('health_members_v4', JSON.stringify(members)); 
-            document.getElementById('newMemberName').value=''; 
-            renderMemberList(); 
-            updateAllViews(); 
+            if(n) { members.push(n); localStorage.setItem('health_members_v4', JSON.stringify(members)); document.getElementById('newMemberName').value=''; renderMemberList(); updateAllViews(); }
         }
-
-        function deleteMember(idx) {
-            if(members.length <= 1) return alert("⚠️ 數據庫至少需保留一位成員");
-            if(confirm(`確定要移除成員「${members[idx]}」嗎？\n(注意：其過往量測數據仍會保留在手機中，但無法在此介面切換查看)`)) {
-                const deletedMember = members[idx];
-                members.splice(idx, 1);
-                if(currentMember === deletedMember) currentMember = members[0];
-                localStorage.setItem('health_members_v4', JSON.stringify(members));
-                renderMemberList();
-                updateAllViews();
-            }
-        }
-
-        function deleteRecord(date, idx) {
-            if(!confirm("確定要永久刪除這筆量測紀錄嗎？")) return;
-            const monthKey = date.substring(0, 7);
-            const dateRecords = db[monthKey][currentMember].filter(r => r.date === date);
-            const targetEntry = dateRecords[idx];
-            
-            // 從月資料陣列中移除
-            db[monthKey][currentMember] = db[monthKey][currentMember].filter(r => r !== targetEntry);
-            
-            localStorage.setItem('health_db_v4', JSON.stringify(db));
-            closeModal(); 
-            updateAllViews();
-        }
-
-        // --- 匯出與報表 (延續原本邏輯，美化 Line 格式) ---
         function sendToLine() {
             const monthKey = document.getElementById('globalMonth').value;
             const data = (db[monthKey] && db[monthKey][currentMember]) ? db[monthKey][currentMember] : [];
-            if(!data.length) return alert("本月無數據可傳送");
-            
-            let msg = `📋【${currentMember}】${monthKey.split('-')[1]}月健康量測報表\n`;
-            msg += `------------------\n`;
-            
-            // 取最近 8 筆
-            data.slice(-8).forEach(r => {
-                msg += `📍 ${r.date.split('-')[2]}日 ${r.time}\n`;
-                if(r.type==='bp') msg += `   血壓: ${r.sys}/${r.dia} mmHg\n`;
-                else msg += `   血糖: ${r.glucose} mg/dL (${r.period})\n`;
-            });
-            
-            msg += `------------------\n更多紀錄請查看 App。\n© Yourfamily Health`;
-            window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(msg)}`;
+            if(!data.length) return alert("無數據");
+            let msg = `📊【${currentMember}】${monthKey} 健康報表\n`;
+            data.slice(-5).forEach(r => msg += `\n📍 ${r.date.split('-')[2]}日 ${r.time}\n   ${r.type==='bp'?`血壓:${r.sys}/${r.dia}`:`血糖:${r.glucose}`}`);
+            window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(msg + '\n\n© Yourfamily Health')}`;
         }
-
         function exportCSV() {
             const monthKey = document.getElementById('globalMonth').value;
             const data = db[monthKey]?.[currentMember] || [];
-            if(!data.length) return alert("本月無數據可匯出");
-
-            let csv = "\ufeff日期,時間,項目,數值1(高壓/血糖),數值2(低壓/時間點),心跳\n";
-            data.forEach(r => {
-                csv += `${r.date},${r.time},${r.type==='bp'?'血壓':'血糖'},${r.sys||r.glucose},${r.dia||r.period},${r.pulse||''}\n`;
-            });
-
-            const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
-            const a = document.createElement("a");
-            a.href = URL.createObjectURL(blob);
-            a.download = `健康報表_${currentMember}_${monthKey}.csv`;
-            a.click();
+            let csv = "\ufeff日期,時間,項目,高壓/血糖,低壓/時間點,心跳\n" + data.map(r => `${r.date},${r.time},${r.type},${r.sys||r.glucose},${r.dia||r.period},${r.pulse||''}`).join("\n");
+            const a = document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'})); a.download=`${currentMember}_${monthKey}.csv`; a.click();
         }
-
         function backupJSON() {
-            const dataStr = JSON.stringify({db, members}, null, 2);
-            const blob = new Blob([dataStr], {type: "application/json"});
-            const a = document.createElement("a");
-            a.href = URL.createObjectURL(blob);
-            a.download = `health_backup_${new Date().toISOString().split('T')[0]}.json`;
-            a.click();
+            const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(db)],{type:"application/json"})); a.download = `backup.json`; a.click();
+        }
+        function deleteRecord(date, idx) {
+            const monthKey = date.substring(0, 7);
+            const list = db[monthKey][currentMember];
+            const recordsOnDate = list.filter(r => r.date === date);
+            const target = recordsOnDate[idx];
+            db[monthKey][currentMember] = list.filter(r => r !== target);
+            localStorage.setItem('health_db_v4', JSON.stringify(db));
+            closeModal(); updateAllViews();
         }
 
-        // --- 啟動 ---
         init();
     </script>
 </body>
