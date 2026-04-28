@@ -2,411 +2,377 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>AI 健康照護 (LINE報表優化版)</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>優兒夏令營行動銀行 Pro</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .nav-active { color: #059669 !important; border-bottom: 3px solid #059669; }
-        .day-cell { min-height: 60px; }
-        #previewContainer { display: none; margin-top: 10px; position: relative; }
-        #previewImg { max-height: 150px; margin: 0 auto; border-radius: 12px; border: 2px solid #fff; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
-        #removePhotoBtn { position: absolute; top: -10px; right: 50%; transform: translateX(75px); background: white; border-radius: 50%; padding: 2px 5px; color: #ef4444; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        :root { 
+            --brand-pink: #e6007e; 
+            --brand-cyan: #00bfff;
+            --success: #28a745; 
+            --danger: #dc3545; 
+            --gray: #ccc;
+            /* 調整文字顏色以在深色背景上顯示 */
+            --text-on-pink: #ffffff;
+            --text-on-glass: #333333;
+        }
+
+        /* 1. 沉浸式全螢幕背景設定 */
+        body { 
+            font-family: -apple-system, system-ui, BlinkMacSystemFont, sans-serif; 
+            text-align: center; 
+            margin: 0; 
+            padding: 0; 
+            background-color: var(--brand-pink); /* 基礎桃紅色 */
+            color: var(--text-on-pink);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* 防止內容跑出去 */
+            position: relative;
+        }
+
+        /* 2. 背景浮水印圖騰 */
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            /* 🚀 請確保 GitHub 倉庫中有 logo.png 並且這裡檔名正確 */
+            background-image: url('logo.png'); 
+            background-size: 80% auto;
+            background-repeat: repeat;
+            background-position: center;
+            opacity: 0.15; /* 設定透明度，做成浮水印 */
+            z-index: 0;
+            pointer-events: none; /* 防止干擾點擊 */
+        }
+
+        /* 內容容器，需在浮水印上方 */
+        .main-container {
+            position: relative;
+            z-index: 1;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: env(safe-area-inset-top) 15px env(safe-area-inset-bottom);
+        }
+
+        /* 3. 標題與分隔線優化 */
+        h2 { 
+            margin: 25px 0 10px; 
+            color: var(--text-on-pink); 
+            font-size: 26px; 
+            font-weight: 800;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .header-sep {
+            width: 90%;
+            height: 4px;
+            background-color: white;
+            border-radius: 2px;
+            margin: 0 auto 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* 4. 掃描與 Logo 區域 */
+        #reader-container { 
+            width: 100%; 
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1; /* 佔滿剩餘空間 */
+        }
+
+        /* 相機視窗樣式 */
+        #reader { 
+            width: 85%; 
+            max-width: 350px;
+            border-radius: 25px; 
+            overflow: hidden; 
+            background: #000; 
+            border: 6px solid white !important; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3); 
+            margin-bottom: 20px;
+            display: none; /* 初始隱藏，按鈕點擊後才出現 */
+        }
+        #reader__dashboard_section_csr, #reader__camera_selection { display: none !important; }
+
+        /* 大 Logo 展示區域 (初始顯示) */
+        #logo-display {
+            width: 90%;
+            max-width: 380px;
+            margin: 20px auto;
+            animation: fadeIn 0.5s ease;
+        }
+        #logo-display img {
+            width: 100%;
+            height: auto;
+            filter: drop-shadow(0 8px 15px rgba(0,0,0,0.4));
+        }
+
+        /* 5. 玻璃擬態交易卡片 (Glassmorphism) */
+        #result-section { 
+            display: none; /* 初始隱藏 */
+            padding: 25px; 
+            /* 🚀 關鍵：半透明白色背景 + 高斯模糊 */
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(15px) saturate(180%);
+            -webkit-backdrop-filter: blur(15px) saturate(180%); /* iOS 支援 */
+            border-radius: 30px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2); 
+            margin: 0 5px 20px; 
+            color: var(--text-on-glass);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            animation: slideUp 0.3s ease-out;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* 交易頁的探頭 Logo (選配，增加趣味性) */
+        #result-section::after {
+            content: "";
+            position: absolute;
+            top: -50px; right: -20px;
+            width: 100px; height: 100px;
+            background-image: url('logo.png'); /* 指向同一個 logo */
+            background-size: contain;
+            background-repeat: no-repeat;
+            opacity: 0.9;
+            z-index: -1; /* 在卡片下方 */
+        }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* 卡片內元素樣式 */
+        .info-box { background: rgba(0,0,0,0.03); padding: 15px; border-radius: 20px; margin-bottom: 15px; border: 1px solid rgba(0,0,0,0.05); }
+        .name { font-size: 32px; font-weight: bold; color: var(--brand-pink); margin-bottom: 5px; text-shadow: 1px 1px 0 white; }
+        .balance { font-size: 45px; font-weight: 900; color: #000; }
+        .id-badge { font-size: 13px; color: #777; margin-bottom: 5px; }
+
+        /* 黑框手動輸入區 */
+        .input-wrapper { margin: 15px 0; }
+        input[type="number"] { 
+            padding: 15px; 
+            font-size: 40px; 
+            width: 90%; 
+            border-radius: 18px; 
+            border: 4px solid #333; /* 強調黑框 */
+            text-align: center; 
+            font-weight: 900; 
+            color: #000;
+            background: rgba(255,255,255,0.8);
+            outline: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        .section-title { text-align: left; font-size: 16px; color: #555; margin: 15px 0 8px 10px; font-weight: bold; }
+
+        /* 紅框快捷金額 (2列4欄) */
+        .btn-grid-8 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+        .btn-small { padding: 18px 2px; font-size: 20px; background: #fff; border: 1px solid #ddd; border-radius: 15px; font-weight: 800; box-shadow: 0 3px 6px rgba(0,0,0,0.1); transition: 0.1s; }
+        .btn-small:active { transform: translateY(2px); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .btn-plus { color: var(--success); }
+        .btn-minus { color: var(--danger); }
+
+        /* 分類按鈕 */
+        .btn-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+        .btn-category { background: #eee; color: #444; border-radius: 12px; font-size: 17px; }
+        .btn-category.active { background: var(--brand-pink) !important; color: white !important; box-shadow: 0 4px 10px rgba(230,0,126,0.3); }
+        
+        /* 確認按鈕 */
+        button.main { padding: 20px; font-size: 26px; font-weight: bold; border-radius: 22px; border: none; width: 100%; margin-top: 5px; cursor: pointer; transition: 0.1s; }
+        .btn-confirm { background: var(--success); color: white; box-shadow: 0 6px 20px rgba(40,167,69,0.4); text-shadow: 0 2px 3px rgba(0,0,0,0.2); }
+        .btn-confirm:active { transform: translateY(3px); box-shadow: 0 3px 10px rgba(40,167,69,0.3); }
+
+        .btn-cancel { background: rgba(0,0,0,0.5); color: white; margin-top: 25px; font-size: 17px; border-radius: 15px; padding: 15px; width: auto; max-width: 200px; align-self: center;}
+
+        /* 6. 啟動按鈕：使用與 Logo 一致的藍色 */
+        #start-btn { 
+            padding: 22px 60px; 
+            font-size: 26px; 
+            font-weight: bold; 
+            background-color: var(--brand-cyan); /* 換成藍色按鈕 */
+            color: white; 
+            border: none; 
+            border-radius: 60px; 
+            cursor: pointer; 
+            margin: 40px auto; 
+            display: block; 
+            box-shadow: 0 10px 30px rgba(0,191,255,0.4); 
+            text-shadow: 0 2px 3px rgba(0,0,0,0.2);
+            transition: 0.2s;
+        }
+        #start-btn:active { transform: scale(0.95); box-shadow: 0 5px 15px rgba(0,191,255,0.3); }
+
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen font-sans text-slate-900 pb-10">
+<body>
 
-    <div class="sticky top-0 z-50 bg-white/90 backdrop-blur-sm shadow-sm">
-        <header class="p-4 flex justify-between items-center border-b border-slate-50">
-            <h1 class="text-lg font-black tracking-tight text-emerald-600">Yourfamily Health</h1>
-            <div class="flex items-center bg-slate-100 rounded-lg px-2 border border-slate-200">
-                <input type="month" id="globalMonth" onchange="updateAllViews()" class="bg-transparent border-none text-xs font-bold p-1.5 outline-none">
+    <div class="main-container">
+        <h2 id="main-title">優兒夏令營行動銀行</h2>
+        <div class="header-sep"></div>
+        
+        <div id="reader-container">
+            <div id="reader"></div>
+
+            <div id="logo-display">
+                <img src="logo.png" alt="Yourfamily Logo">
+                <button id="start-btn" onclick="requestPermission()">啟動鏡頭</button>
             </div>
-        </header>
-        <nav class="flex justify-around items-center border-b border-slate-100">
-            <button onclick="nav('record')" id="nav-record" class="flex-1 py-3 flex flex-col items-center text-slate-400 nav-active font-bold"><i class="fas fa-edit text-sm"></i><span class="text-[11px] mt-1">紀錄</span></button>
-            <button onclick="nav('trend')" id="nav-trend" class="flex-1 py-3 flex flex-col items-center text-slate-400 font-bold"><i class="fas fa-chart-line text-sm"></i><span class="text-[11px] mt-1">趨勢</span></button>
-            <button onclick="nav('settings')" id="nav-settings" class="flex-1 py-3 flex flex-col items-center text-slate-400 font-bold"><i class="fas fa-cog text-sm"></i><span class="text-[11px] mt-1">管理</span></button>
-        </nav>
-    </div>
-
-    <div class="mt-2">
-        <main id="recordPage" class="p-4 space-y-4 max-w-xl mx-auto">
-            <div id="memberTabs" class="flex space-x-2 overflow-x-auto pb-2 no-scrollbar"></div>
-
-            <div class="bg-white rounded-3xl shadow-sm p-6 border border-slate-100">
-                <div class="flex bg-slate-50 rounded-xl p-1 mb-4 border">
-                    <button onclick="switchType('bp')" id="bpBtn" class="flex-1 py-1.5 text-xs rounded-lg bg-white shadow-sm font-bold text-emerald-600">血壓/心跳</button>
-                    <button onclick="switchType('bs')" id="bsBtn" class="flex-1 py-1.5 text-xs rounded-lg text-slate-400">血糖紀錄</button>
-                </div>
-
-                <div id="bpInput" class="grid grid-cols-3 gap-3 mb-4">
-                    <div class="bg-slate-50 p-2 rounded-xl text-center">
-                        <label class="text-[9px] font-bold text-slate-400 block">收縮壓</label>
-                        <input type="number" id="sys" placeholder="120" inputmode="numeric" class="bg-transparent w-full text-center font-black text-xl outline-none">
-                    </div>
-                    <div class="bg-slate-50 p-2 rounded-xl text-center">
-                        <label class="text-[9px] font-bold text-slate-400 block">舒張壓</label>
-                        <input type="number" id="dia" placeholder="80" inputmode="numeric" class="bg-transparent w-full text-center font-black text-xl outline-none">
-                    </div>
-                    <div class="bg-slate-50 p-2 rounded-xl text-center">
-                        <label class="text-[9px] font-bold text-slate-400 block">心跳</label>
-                        <input type="number" id="pulse" placeholder="75" inputmode="numeric" class="bg-transparent w-full text-center font-black text-xl outline-none">
-                    </div>
-                </div>
-
-                <div id="bsInput" class="hidden grid grid-cols-2 gap-3 mb-4">
-                    <input type="number" id="glucose" placeholder="血糖值" inputmode="numeric" class="bg-slate-50 p-4 rounded-xl text-center font-black text-xl outline-none">
-                    <select id="bsPeriod" class="bg-slate-50 p-4 rounded-xl text-sm font-bold outline-none border-none">
-                        <option value="空腹">空腹</option><option value="飯後2hr">飯後 2hr</option>
-                    </select>
-                </div>
-
-                <div class="mb-4 grid grid-cols-2 gap-3">
-                    <button onclick="triggerInput('cameraInput')" class="py-2.5 bg-slate-100 text-slate-600 rounded-xl text-xs font-bold border active:bg-slate-200">
-                        <i class="fas fa-camera mr-1 text-emerald-500"></i> 直接拍照
-                    </button>
-                    <button onclick="triggerInput('galleryInput')" class="py-2.5 bg-slate-100 text-slate-600 rounded-xl text-xs font-bold border active:bg-slate-200">
-                        <i class="fas fa-image mr-1 text-sky-500"></i> 相簿上傳
-                    </button>
-                </div>
-                <input type="file" id="cameraInput" accept="image/*" capture="camera" class="hidden" onchange="handleFileSelect(event)">
-                <input type="file" id="galleryInput" accept="image/*" class="hidden" onchange="handleFileSelect(event)">
-
-                <div id="previewContainer">
-                    <img id="previewImg" src=""><button id="removePhotoBtn" onclick="removeCurrentPhoto()"><i class="fas fa-times text-xs"></i></button>
-                </div>
-
-                <button onclick="saveData()" class="w-full mt-3 py-4 bg-emerald-600 text-white rounded-2xl font-bold shadow-lg active:scale-95 transition">儲存 <span id="targetDate">今日</span> 紀錄</button>
+        </div>
+        
+        <div id="result-section">
+            <div class="info-box">
+                <div id="display-name" class="name">載入中...</div>
+                <div class="id-badge">ID: <span id="display-id">---</span></div>
+                <div style="font-size: 14px; color: #666; margin-top: 10px;">目前餘額</div>
+                <div id="display-balance" class="balance">---</div>
             </div>
-
-            <section class="bg-white rounded-3xl shadow-sm p-5 border border-slate-100">
-                <div id="calendarGrid" class="grid grid-cols-7 gap-1.5 text-sm text-center"></div>
-            </section>
-        </main>
-
-        <main id="trendPage" class="hidden p-4 space-y-4 max-w-xl mx-auto">
-            <section class="bg-white rounded-3xl shadow-sm p-6 border border-slate-100">
-                <h3 class="text-sm font-bold text-slate-700 mb-4 text-center">血壓走勢 (收縮/舒張壓)</h3>
-                <div style="height: 300px;"><canvas id="bpChart"></canvas></div>
-            </section>
-            <section class="bg-white rounded-3xl shadow-sm p-6 border border-slate-100">
-                <h3 class="text-sm font-bold text-slate-700 mb-4 text-center">血糖走勢</h3>
-                <div style="height: 300px;"><canvas id="bsChart"></canvas></div>
-            </section>
-        </main>
-
-        <main id="settingsPage" class="hidden p-4 space-y-4 max-w-xl mx-auto">
-            <section class="bg-white rounded-3xl p-6 border border-slate-100">
-                <h3 class="font-bold mb-4 text-slate-700">成員管理</h3>
-                <div id="memberList" class="space-y-2 mb-4"></div>
-                <div class="flex gap-2">
-                    <input type="text" id="newMemberName" placeholder="新成員" class="flex-1 bg-slate-50 rounded-xl px-4 py-2 border outline-emerald-500 text-sm">
-                    <button onclick="addMember()" class="bg-slate-800 text-white px-6 py-2 rounded-xl text-sm font-bold">新增</button>
-                </div>
-            </section>
             
-            <div class="space-y-3">
-                <button onclick="sendToLine()" class="w-full py-4 bg-[#06C755] text-white rounded-2xl font-bold flex items-center justify-center shadow-sm active:bg-[#05b54d] transition"><i class="fab fa-line mr-2 text-xl"></i> 傳送 LINE 報表</button>
-                
-                <div class="grid grid-cols-2 gap-3">
-                    <button onclick="exportCSV()" class="py-4 bg-white border border-slate-200 rounded-2xl font-bold text-slate-600 flex items-center justify-center text-sm shadow-sm active:bg-slate-50"><i class="fas fa-file-csv mr-2 text-emerald-500"></i> 匯出 CSV</button>
-                    <button onclick="backupJSON()" class="py-4 bg-white border border-slate-200 rounded-2xl font-bold text-slate-600 flex items-center justify-center text-sm shadow-sm active:bg-slate-50"><i class="fas fa-download mr-2 text-sky-500"></i> 下載備份</button>
-                </div>
-
-                <div class="p-4 bg-amber-50 rounded-2xl border border-amber-100">
-                    <p class="text-[10px] font-black text-amber-600 mb-2 flex items-center tracking-wider"><i class="fas fa-exclamation-triangle mr-1"></i> 資料備份還原</p>
-                    <button onclick="triggerInput('importFile')" class="w-full py-3 bg-amber-500 text-white rounded-xl font-bold text-sm shadow-sm active:bg-amber-600 transition flex items-center justify-center">
-                        <i class="fas fa-upload mr-2"></i> 匯入 JSON 備份檔案
-                    </button>
-                    <input type="file" id="importFile" accept=".json" class="hidden" onchange="importJSON(event)">
-                </div>
+            <div class="input-wrapper">
+                <input type="number" id="amount" value="0" pattern="[0-9-]*">
             </div>
-        </main>
-    </div>
+            
+            <div class="section-title">快速金額加總</div>
+            <div class="btn-grid-8">
+                <button class="btn-small btn-plus" onclick="addVal(1)">+1</button>
+                <button class="btn-small btn-plus" onclick="addVal(5)">+5</button>
+                <button class="btn-small btn-plus" onclick="addVal(10)">+10</button>
+                <button class="btn-small btn-plus" onclick="addVal(50)">+50</button>
+                <button class="btn-small btn-minus" onclick="addVal(-1)">-1</button>
+                <button class="btn-small btn-minus" onclick="addVal(-5)">-5</button>
+                <button class="btn-small btn-minus" onclick="addVal(-10)">-10</button>
+                <button class="btn-small btn-minus" onclick="addVal(-50)">-50</button>
+            </div>
 
-    <div id="detailModal" class="fixed inset-0 bg-black/70 hidden z-[100] flex items-end sm:items-center justify-center p-4 backdrop-blur-sm" onclick="closeModal()">
-        <div class="bg-white w-full max-w-xl rounded-t-[2.5rem] sm:rounded-[2.5rem] p-8 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
-            <div id="modalContent" class="space-y-6"></div>
-            <button onclick="closeModal()" class="w-full mt-6 py-4 bg-slate-100 text-slate-500 rounded-2xl font-bold">關閉</button>
+            <div class="section-title">交易項目</div>
+            <div class="btn-grid-3">
+                <button class="btn-small btn-category" onclick="setNote(this, '餅乾')">🍪 餅乾</button>
+                <button class="btn-small btn-category" onclick="setNote(this, '飲料')">🧃 飲料</button>
+                <button class="btn-small btn-category" onclick="setNote(this, '其他')">❓ 其他</button>
+            </div>
+            <input type="hidden" id="note" value="一般交易">
+            
+            <button id="send-btn" class="main btn-confirm" onclick="sendData()">確認交易</button>
+            <button class="main btn-cancel" onclick="resumeScanner()">取消並重掃</button>
         </div>
     </div>
 
     <script>
-        // --- 核心變數與初始化 ---
-        let members = JSON.parse(localStorage.getItem('health_members_v4') || '["爸爸", "媽媽"]');
-        let currentMember = members[0];
-        let activeDate = new Date().toISOString().split('T')[0];
-        let db = JSON.parse(localStorage.getItem('health_db_v4') || '{}');
-        let currentType = 'bp';
-        let currentBase64 = null;
-        let charts = {};
+        const scriptURL = "https://script.google.com/macros/s/AKfycbx61w5SchKA2-CUpBs3QBCOS79u5CoPy7yZMTzbiLJo-MySiAn_O-96DGuC68bJs1Pz/exec"; 
+        let html5QrCode;
+        let globalId = ""; 
+        let isPaused = false;
 
-        function init() {
-            document.getElementById('globalMonth').value = activeDate.substring(0, 7);
-            updateAllViews();
-        }
+        function requestPermission() {
+            // 邏輯調整：隱藏 Logo 顯示區域，顯示相機
+            document.getElementById('logo-display').style.display = 'none';
+            document.getElementById('reader').style.display = 'block';
 
-        // --- 導覽功能 ---
-        function nav(page) {
-            ['record', 'trend', 'settings'].forEach(p => {
-                document.getElementById(p + 'Page').classList.add('hidden');
-                document.getElementById('nav-' + p).classList.remove('nav-active');
+            if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+            const config = { fps: 20, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 };
+            html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess)
+            .catch(err => {
+                alert("相機啟動失敗，請確認是否允許權限並使用 HTTPS");
+                location.reload();
             });
-            document.getElementById(page + 'Page').classList.remove('hidden');
-            document.getElementById('nav-' + page).classList.add('nav-active');
-            if(page === 'trend') renderCharts();
-            if(page === 'settings') renderMemberList();
         }
 
-        function triggerInput(id) { document.getElementById(id).click(); }
+        function onScanSuccess(decodedText) {
+            if (isPaused) return;
+            isPaused = true;
+            if (navigator.vibrate) navigator.vibrate(80);
+            globalId = decodedText.trim();
 
-        // --- 圖片處理 ---
-        function handleFileSelect(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 400;
-                    let width = img.width, height = img.height;
-                    if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-                    canvas.width = width; canvas.height = height;
-                    canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-                    currentBase64 = canvas.toDataURL('image/jpeg', 0.6);
-                    document.getElementById('previewImg').src = currentBase64;
-                    document.getElementById('previewContainer').style.display = 'block';
-                    e.target.value = '';
-                };
-                img.src = event.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function removeCurrentPhoto() {
-            currentBase64 = null;
-            document.getElementById('previewContainer').style.display = 'none';
-        }
-
-        // --- 儲存與匯入 ---
-        function saveData() {
-            const sys = document.getElementById('sys').value, dia = document.getElementById('dia').value, glucose = document.getElementById('glucose').value;
-            if(currentType === 'bp' && (!sys || !dia)) return alert("請輸入完整血壓值");
-            if(currentType === 'bs' && !glucose) return alert("請輸入血糖值");
-
-            const time = new Date().toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit', hour12:false});
-            let entry = { time, type: currentType, date: activeDate, photo: currentBase64 };
-            if(currentType === 'bp') { entry.sys = sys; entry.dia = dia; entry.pulse = document.getElementById('pulse').value || '--'; }
-            else { entry.glucose = glucose; entry.period = document.getElementById('bsPeriod').value; }
-
-            const monthKey = activeDate.substring(0, 7);
-            if(!db[monthKey]) db[monthKey] = {};
-            if(!db[monthKey][currentMember]) db[monthKey][currentMember] = [];
-            db[monthKey][currentMember].push(entry);
+            // 暴力換頁：隱藏掃描區域，顯示交易卡片
+            document.getElementById('reader-container').style.display = 'none';
+            document.getElementById('main-title').style.display = 'none';
+            document.getElementById('header-sep').style.display = 'none';
+            document.getElementById('result-section').style.display = 'block';
             
-            try {
-                localStorage.setItem('health_db_v4', JSON.stringify(db));
-                alert("✅ 儲存成功");
-                removeCurrentPhoto();
-                ['sys','dia','pulse','glucose'].forEach(id => document.getElementById(id).value = '');
-                updateAllViews();
-            } catch (e) { alert("儲存空間不足"); }
-        }
+            document.getElementById('display-id').innerText = globalId;
+            document.getElementById('display-name').innerText = "讀取中...";
+            document.getElementById('display-balance').innerText = "---";
+            document.getElementById('amount').value = 0;
 
-        function importJSON(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const importedData = JSON.parse(e.target.result);
-                    if (confirm("確要匯入資料嗎？")) {
-                        for (let month in importedData) {
-                            if (!db[month]) db[month] = {};
-                            for (let person in importedData[month]) {
-                                if (!db[month][person]) { db[month][person] = importedData[month][person]; } 
-                                else {
-                                    const merged = [...db[month][person], ...importedData[month][person]];
-                                    db[month][person] = merged.filter((v,i,a)=>a.findIndex(t=>(t.date===v.date && t.time===v.time && t.type===v.type))===i);
-                                }
-                            }
-                        }
-                        localStorage.setItem('health_db_v4', JSON.stringify(db));
-                        alert("匯入成功"); window.location.reload();
-                    }
-                } catch (err) { alert("匯入失敗"); }
-            };
-            reader.readAsText(file);
-        }
-
-        // --- 健康衛教與詳情彈窗 ---
-        function getHealthAdvice(entry) {
-            if(entry.type === 'bp') {
-                const s = parseInt(entry.sys), d = parseInt(entry.dia);
-                if(s >= 140 || d >= 90) return { status: '偏高', color: 'text-rose-500', bg: 'bg-rose-50', icon: 'fa-exclamation-triangle', advice: '血壓稍高。' };
-                return { status: '正常', color: 'text-emerald-500', bg: 'bg-emerald-50', icon: 'fa-check-circle', advice: '狀況優良！' };
-            } else {
-                const g = parseInt(entry.glucose);
-                if(g >= 126 && entry.period === '空腹') return { status: '偏高', color: 'text-rose-500', bg: 'bg-rose-50', icon: 'fa-exclamation-triangle', advice: '空腹血糖偏高。' };
-                return { status: '正常', color: 'text-emerald-500', bg: 'bg-emerald-50', icon: 'fa-check-circle', advice: '數值穩定。' };
-            }
-        }
-
-        function openModal(date) {
-            const monthKey = date.substring(0, 7);
-            const data = (db[monthKey] && db[monthKey][currentMember]) ? db[monthKey][currentMember].filter(r => r.date === date) : [];
-            let html = `<div class="text-center mb-6"><h2 class="text-2xl font-black">${date}</h2><p class="text-xs text-slate-400 font-bold">${currentMember}</p></div>`;
-            if(!data.length) html += `<p class="text-center py-10 text-slate-400">無紀錄</p>`;
-            else {
-                html += data.map((r, idx) => {
-                    const advice = getHealthAdvice(r);
-                    return `<div class="p-6 rounded-3xl border border-slate-100 bg-slate-50 space-y-4 relative shadow-inner">
-                        <button onclick="deleteRecord('${date}', ${idx})" class="absolute top-4 right-4 text-[10px] text-red-300 font-bold">刪除</button>
-                        <div class="flex items-center text-xs font-black text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full w-fit"><i class="far fa-clock mr-1.5"></i>${r.time}</div>
-                        <div class="text-2xl font-black text-slate-800">${r.type==='bp' ? `<i class="fas fa-heartbeat text-rose-500 mr-2"></i>${r.sys}/${r.dia}` : `<i class="fas fa-tint text-blue-500 mr-2"></i>${r.glucose}`}</div>
-                        <div class="${advice.bg} ${advice.color} p-4 rounded-2xl border border-white text-xs font-bold shadow-sm"><i class="fas ${advice.icon} mr-1"></i> AI 分析：${advice.status}</div>
-                        ${r.photo ? `<img src="${r.photo}" class="w-full rounded-2xl shadow-md border-4 border-white">` : ''}
-                    </div>`;
-                }).join('');
-            }
-            document.getElementById('modalContent').innerHTML = html;
-            document.getElementById('detailModal').classList.remove('hidden');
-        }
-
-        function closeModal() { document.getElementById('detailModal').classList.add('hidden'); }
-
-        // --- 日曆與趨勢圖 ---
-        function renderCalendar() {
-            const monthVal = document.getElementById('globalMonth').value;
-            const [y, m] = monthVal.split('-').map(Number);
-            const firstDay = new Date(y, m-1, 1).getDay();
-            const daysInMonth = new Date(y, m, 0).getDate();
-            const container = document.getElementById('calendarGrid');
-            container.innerHTML = '';
-            for(let i=0; i<firstDay; i++) container.innerHTML += '<div></div>';
-            const monthData = (db[monthVal] && db[monthVal][currentMember]) ? db[monthVal][currentMember] : [];
-            for(let d=1; d<=daysInMonth; d++) {
-                const fullDate = `${monthVal}-${String(d).padStart(2, '0')}`;
-                const entries = monthData.filter(r => r.date === fullDate);
-                const isSelected = fullDate === activeDate;
-                container.innerHTML += `<div onclick="selectDate('${fullDate}', ${entries.length > 0})" class="day-cell flex flex-col items-center justify-center rounded-2xl cursor-pointer transition ${isSelected?'bg-emerald-600 text-white shadow-md font-bold':'text-slate-500 hover:bg-slate-100'}">
-                    <span class="text-xs">${d}</span>${entries.length > 0 ? `<div class="w-1.5 h-1.5 ${isSelected?'bg-white':'bg-emerald-400'} rounded-full mt-1"></div>` : '<div class="h-1.5 mt-1"></div>'}</div>`;
-            }
-        }
-
-        function selectDate(d, h) { activeDate = d; renderCalendar(); if(h) openModal(d); }
-
-        function renderCharts() {
-            const monthKey = document.getElementById('globalMonth').value;
-            const data = (db[monthKey] && db[monthKey][currentMember]) ? db[monthKey][currentMember] : [];
-            const labels = [...new Set(data.map(r => r.date.split('-')[2]))].sort();
-            
-            const bpCtx = document.getElementById('bpChart').getContext('2d');
-            if(charts['bpChart']) charts['bpChart'].destroy();
-            const sysData = labels.map(day => { const d = data.filter(r => r.date.endsWith(day) && r.type==='bp'); return d.length ? d[d.length-1].sys : null; });
-            const diaData = labels.map(day => { const d = data.filter(r => r.date.endsWith(day) && r.type==='bp'); return d.length ? d[d.length-1].dia : null; });
-            
-            charts['bpChart'] = new Chart(bpCtx, {
-                type: 'line',
-                data: { labels: labels.map(l => l+'日'), datasets: [
-                    { label: '收縮壓(高壓)', data: sysData, borderColor: '#e11d48', tension: 0.4, fill: false },
-                    { label: '舒張壓(低壓)', data: diaData, borderColor: '#fbbf24', tension: 0.4, fill: false }
-                ]},
-                options: { 
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } }
+            // 背景關閉相機 (不阻塞 UI 跳轉)
+            setTimeout(() => {
+                if(html5QrCode && html5QrCode.getState() === 2) {
+                    html5QrCode.stop().catch(() => {});
                 }
-            });
+            }, 50);
 
-            const bsCtx = document.getElementById('bsChart').getContext('2d');
-            if(charts['bsChart']) charts['bsChart'].destroy();
-            const glucoseData = labels.map(day => { const d = data.filter(r => r.date.endsWith(day) && r.type==='bs'); return d.length ? d[d.length-1].glucose : null; });
-            charts['bsChart'] = new Chart(bsCtx, {
-                type: 'line',
-                data: { labels: labels.map(l => l+'日'), datasets: [{ label: '血糖', data: glucoseData, borderColor: '#2563eb', tension: 0.4, fill: false }]},
-                options: { 
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } }
-                }
-            });
-        }
-
-        // --- 成員與報表導出 ---
-        function switchType(t) {
-            currentType = t;
-            document.getElementById('bpInput').classList.toggle('hidden', t !== 'bp');
-            document.getElementById('bsInput').classList.toggle('hidden', t !== 'bs');
-            document.getElementById('bpBtn').className = t === 'bp' ? 'flex-1 py-1.5 text-xs rounded-lg bg-white shadow-sm font-bold text-emerald-600' : 'flex-1 py-1.5 text-xs rounded-lg text-slate-400';
-            document.getElementById('bsBtn').className = t === 'bs' ? 'flex-1 py-1.5 text-xs rounded-lg bg-white shadow-sm font-bold text-emerald-600' : 'flex-1 py-1.5 text-xs rounded-lg text-slate-400';
-        }
-        function updateAllViews() { renderMemberTabs(); renderCalendar(); }
-        function renderMemberTabs() {
-            document.getElementById('memberTabs').innerHTML = members.map(m => `
-                <button onclick="currentMember='${m}';updateAllViews()" class="px-5 py-2 rounded-xl whitespace-nowrap text-sm font-bold ${currentMember === m ? 'bg-slate-800 text-white shadow-md' : 'bg-white text-slate-400 border border-slate-100'}">${m}</button>
-            `).join('');
-        }
-        function renderMemberList() {
-            document.getElementById('memberList').innerHTML = members.map((m, i) => `
-                <div class="flex justify-between bg-slate-50 p-4 rounded-2xl items-center font-bold"><span>${m}</span><button onclick="members.splice(${i},1);localStorage.setItem('health_members_v4',JSON.stringify(members));renderMemberList();updateAllViews()" class="text-red-400 text-xs">移除</button></div>`).join('');
-        }
-        function addMember() {
-            const n = document.getElementById('newMemberName').value.trim();
-            if(n) { members.push(n); localStorage.setItem('health_members_v4', JSON.stringify(members)); document.getElementById('newMemberName').value=''; renderMemberList(); updateAllViews(); }
-        }
-
-        // --- LINE 報表發送 (優化重點) ---
-        function sendToLine() {
-            const monthKey = document.getElementById('globalMonth').value;
-            const data = (db[monthKey] && db[monthKey][currentMember]) ? db[monthKey][currentMember] : [];
-            if(!data.length) return alert("本月尚無紀錄");
-
-            // 按照日期排序
-            const sortedData = data.sort((a, b) => new Date(a.date) - new Date(b.date));
-            
-            let msg = `📊【${currentMember}】健康報表 (${monthKey})\n`;
-            
-            // 限制輸出最後 10 筆紀錄，避免訊息過長
-            sortedData.slice(-10).forEach(r => {
-                const day = r.date.split('-')[2]; // 只取日期
-                if(r.type === 'bp') {
-                    msg += `\n📍 ${day}日 血壓: ${r.sys}/${r.dia}`;
+            // 發送 API
+            fetch(`${scriptURL}?id=${encodeURIComponent(globalId)}&amount=0`)
+            .then(res => res.json())
+            .then(data => {
+                if(data.status !== "error") {
+                    document.getElementById('display-name').innerText = data.name;
+                    document.getElementById('display-balance').innerText = data.balance;
                 } else {
-                    // 區分飯前飯後顯示
-                    msg += `\n📍 ${day}日 血糖(${r.period}): ${r.glucose}`;
+                    document.getElementById('display-name').innerText = "查詢失敗";
+                    document.getElementById('display-balance').innerText = data.message;
                 }
+            })
+            .catch(() => {
+                document.getElementById('display-name').innerText = "網路異常";
             });
-            
-            msg += `\n\n© Yourfamily Health`;
-            window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(msg)}`;
         }
 
-        function exportCSV() {
-            const monthKey = document.getElementById('globalMonth').value;
-            const data = db[monthKey]?.[currentMember] || [];
-            let csv = "\ufeff日期,項目,數值,狀態\n" + data.map(r => `${r.date},${r.type},${r.sys||r.glucose},${r.dia||r.period}`).join("\n");
-            const a = document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'})); a.download=`${currentMember}_health.csv`; a.click();
+        // 🚀 優化：取消或完成交易後，回到 Logo 首頁
+        function resumeScanner() {
+            isPaused = false;
+            document.getElementById('result-section').style.display = 'none';
+            // 顯示 Logo 首頁
+            document.getElementById('main-title').style.display = 'block';
+            document.getElementById('header-sep').style.display = 'block';
+            document.getElementById('reader-container').style.display = 'block';
+            document.getElementById('logo-display').style.display = 'block';
+            document.getElementById('reader').style.display = 'none';
         }
 
-        function backupJSON() {
-            const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(db)],{type:"application/json"})); a.download = `health_backup.json`; a.click();
+        function addVal(v) {
+            const input = document.getElementById('amount');
+            let current = parseInt(input.value) || 0;
+            input.value = current + v;
         }
 
-        function deleteRecord(date, idx) {
-            const monthKey = date.substring(0, 7);
-            const list = db[monthKey][currentMember];
-            const target = list.filter(r => r.date === date)[idx];
-            db[monthKey][currentMember] = list.filter(r => r !== target);
-            localStorage.setItem('health_db_v4', JSON.stringify(db));
-            closeModal(); updateAllViews();
+        function setNote(btn, n) {
+            document.querySelectorAll('.btn-category').forEach(el => el.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('note').value = n;
         }
 
-        init();
+        function sendData() {
+            const amountVal = document.getElementById('amount').value;
+            const noteVal = document.getElementById('note').value;
+            if(amountVal == 0 || amountVal == "") return alert("請輸入金額");
+            const btn = document.getElementById('send-btn');
+            btn.innerText = "寫入中..."; btn.disabled = true;
+
+            fetch(`${scriptURL}?id=${encodeURIComponent(globalId)}&amount=${amountVal}&note=${encodeURIComponent(noteVal)}`)
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === "success") {
+                    alert(`✅ 完成！\n學員：${data.name}\n變動：${amountVal}\n餘額：${data.newBalance}`);
+                    btn.innerText = "確認交易"; btn.disabled = false;
+                    resumeScanner();
+                } else {
+                    alert("失敗：" + data.message);
+                    btn.innerText = "確認交易"; btn.disabled = false;
+                }
+            })
+            .catch(() => {
+                alert("網路異常");
+                btn.innerText = "確認交易"; btn.disabled = false;
+            });
+        }
     </script>
 </body>
 </html>
